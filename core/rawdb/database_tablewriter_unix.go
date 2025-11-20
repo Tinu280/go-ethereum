@@ -1,33 +1,37 @@
-// Copyright 2025 The go-ethereum Authors
-// This file is part of the go-ethereum library.
-//
-// The go-ethereum library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The go-ethereum library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
-
-//go:build !tinygo
-// +build !tinygo
-
 package rawdb
 
 import (
+	"fmt"
 	"io"
-
-	"github.com/olekukonko/tablewriter"
+	"strings"
 )
 
-// Re-export the real tablewriter types and functions
-type Table = tablewriter.Table
+type Table struct {
+	w      io.Writer
+	header []string
+	footer []string
+	rows   [][]string
+}
 
-func newTableWriter(w io.Writer) *Table {
-	return tablewriter.NewWriter(w)
+func NewTableWriter(w io.Writer) *Table {
+	return &Table{w: w}
+}
+
+func (t *Table) SetHeader(h []string)       { t.header = h }
+func (t *Table) SetFooter(f []string)       { t.footer = f }
+func (t *Table) Append(r []string)          { t.rows = append(t.rows, r) }
+func (t *Table) AppendBulk(rows [][]string) { t.rows = append(t.rows, rows...) }
+
+func (t *Table) Render() {
+	if t.header != nil {
+		fmt.Fprintln(t.w, strings.Join(t.header, "\t| "))
+		fmt.Fprintln(t.w, strings.Repeat("-", 80))
+	}
+	for _, r := range t.rows {
+		fmt.Fprintln(t.w, strings.Join(r, "\t| "))
+	}
+	if t.footer != nil {
+		fmt.Fprintln(t.w, strings.Repeat("-", 80))
+		fmt.Fprintln(t.w, strings.Join(t.footer, "\t| "))
+	}
 }

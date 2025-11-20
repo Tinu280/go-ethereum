@@ -41,7 +41,6 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/ethereum/go-ethereum/triedb"
-	"github.com/olekukonko/tablewriter"
 	"github.com/urfave/cli/v2"
 )
 
@@ -760,10 +759,15 @@ func showMetaData(ctx *cli.Context) error {
 		data = append(data, []string{"headHeader.Root", fmt.Sprintf("%v", h.Root)})
 		data = append(data, []string{"headHeader.Number", fmt.Sprintf("%d (%#x)", h.Number, h.Number)})
 	}
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Field", "Value"})
-	table.AppendBulk(data)
-	table.Render()
+	// Print metadata without tablewriter
+	fmt.Printf("%-32s | %s\n", "Field", "Value")
+	fmt.Println(strings.Repeat("-", 60))
+	for _, row := range data {
+		if len(row) >= 2 {
+			fmt.Printf("%-32s | %s\n", row[0], row[1])
+		}
+	}
+
 	return nil
 }
 
